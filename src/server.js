@@ -50,6 +50,7 @@ export class StatusServer {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
       if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+      if (req.method === "GET" && req.url === "/health") { res.writeHead(200); res.end("OK"); return; }
       const token = (req.headers.authorization || "").replace("Bearer ", "");
       if (!this._auth(token)) { res.writeHead(401); res.end(JSON.stringify({ error: "Unauthorized" })); return; }
       if (req.method === "GET" && req.url === "/api") { res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(this._snapshot())); return; }
