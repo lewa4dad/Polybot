@@ -20,7 +20,7 @@ export class Engine {
   async fetchMarkets() {
     const markets = await this.client.fetchBTCMarkets();
     if (markets.length === 0) { logger.warn("No BTC markets found"); return; }
-    this.markets = markets.filter(m => m.active && m.volume > 100);
+    this.markets = markets.filter(m => m.active);
     logger.info(`Loaded ${this.markets.length} tradeable BTC markets`);
   }
 
