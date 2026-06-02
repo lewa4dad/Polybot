@@ -27,7 +27,8 @@ export class Engine {
   async refreshPrices() {
     const tasks = this.markets.map(async (m) => {
       try {
-       const yesToken = m.tokens?.[0]?.token_id || m.conditionId;
+     const yesToken = m.clobTokenIds?.[0] || m.tokens?.[0]?.token_id || m.tokens?.[0] || m.conditionId;
+logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | clobTokenIds: ${JSON.stringify(m.clobTokenIds)}`);
 logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | tokens: ${JSON.stringify(m.tokens?.slice(0,1))}`);
         const noToken  = m.tokens?.[1]?.token_id;
         const [book] = await Promise.all([this.client.fetchOrderBook(yesToken), this.client.fetchSpread(yesToken)]);
