@@ -27,7 +27,10 @@ export class Engine {
   async refreshPrices() {
     const tasks = this.markets.map(async (m) => {
       try {
-     const yesToken = m.clobTokenIds?.[0] || m.tokens?.[0]?.token_id || m.tokens?.[0] || m.conditionId;
+   const clobIds = Array.isArray(m.clobTokenIds) ? m.clobTokenIds : (typeof m.clobTokenIds === 'string' ? JSON.parse(m.clobTokenIds) : []);
+const yesToken = clobIds[0] || m.tokens?.[0]?.token_id || m.conditionId;
+const noToken = clobIds[1] || m.tokens?.[1]?.token_id || null;
+logger.info(`Using tokens | YES: ${yesToken?.slice(0,20)}... | NO: ${noToken?.slice(0,20)}...`);
 logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | clobTokenIds: ${JSON.stringify(m.clobTokenIds)}`);
 logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | tokens: ${JSON.stringify(m.tokens?.slice(0,1))}`);
         const noToken  = m.tokens?.[1]?.token_id;
