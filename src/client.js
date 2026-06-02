@@ -39,7 +39,7 @@ export class PolymarketClient {
       return true;
     });
     logger.info(`Found ${btc.length} active BTC markets`);
-    return btc.map(m => ({ conditionId: m.conditionId || m.id, slug: m.slug, question: m.question || m.title, endDate: m.endDate || m.end_date_iso, volume: parseFloat(m.volume || 0), liquidity: parseFloat(m.liquidity || 0), active: m.active !== false, tokens: m.tokens || [] }));
+   return btc.map(m => ({ conditionId: m.conditionId || m.id, slug: m.slug, question: m.question || m.title, endDate: m.endDate || m.end_date_iso, volume: parseFloat(m.volume || 0), liquidity: parseFloat(m.liquidity || 0), active: m.active !== false, tokens: m.tokens || [], clobTokenIds: m.clobTokenIds || m.clob_token_ids || [] }));
   } catch (err) { logger.error(`Failed to fetch markets: ${err.message}`); return []; }
 }
 
