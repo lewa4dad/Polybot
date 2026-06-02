@@ -31,9 +31,6 @@ export class Engine {
 const yesToken = clobIds[0] || m.tokens?.[0]?.token_id || m.conditionId;
 const noToken = clobIds[1] || m.tokens?.[1]?.token_id || null;
 logger.info(`Using tokens | YES: ${yesToken?.slice(0,20)}... | NO: ${noToken?.slice(0,20)}...`);
-logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | clobTokenIds: ${JSON.stringify(m.clobTokenIds)}`);
-logger.info(`Market: ${m.question?.slice(0,40)} | yesToken: ${yesToken} | tokens: ${JSON.stringify(m.tokens?.slice(0,1))}`);
-        const noToken  = m.tokens?.[1]?.token_id;
         const [book] = await Promise.all([this.client.fetchOrderBook(yesToken), this.client.fetchSpread(yesToken)]);
         if (!book) return;
         const bestBid  = parseFloat(book.bids?.[0]?.price || 0);
