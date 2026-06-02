@@ -23,15 +23,25 @@ export class PolymarketClient {
     this.clob.interceptors.response.use(r => r, err => { logger.debug(`CLOB err: ${err.response?.data?.message || err.message}`); return Promise.reject(err); });
   }
 
-  async fetchBTCMarkets() {
-    try {
-      const res = await axios.get(`${GAMMA_BASE}/markets`, { params: { tag_slug: "crypto", active: true, limit: 80, closed: false }, timeout: 10000 });
-      const all = Array.isArray(res.data) ? res.data : res.data.markets || [];
-      const btc = all.filter(m => { const q = (m.question || m.title || "").toLowerCase(); return q.includes("bitcoin") || q.includes("btc"); });
-      logger.info(`Found ${btc.length} active BTC markets`);
-      return btc.map(m => ({ conditionId: m.conditionId || m.id, slug: m.slug, question: m.question || m.title, endDate: m.endDate || m.end_date_iso, volume: parseFloat(m.volume || m.volumeNum || 0), liquidity: parseFloat(m.liquidity || 0), active: m.active !== false, tokens: m.tokens || [] }));
-    } catch (err) { logger.error(`Failed to fetch BTC markets: ${err.message}`); return []; }
-  }
+ async fetchBTCMarkets() {
+  try {
+    const results = await Promise.all([
+      axios.get(`${GAMMA_BASE}/markets`, { params: { tag_slug: "bitcoin", active: true, limit: 100 }, timeout: 10000 }),
+      axios.get(`${GAMMA_BASE}/markets`, { params: { tag_slug: "crypto", active: true, limit: 100 }, timeout: 10000 }),
+    ]);
+    const all = [...(results[0].data.markets || results[0].data || []), ...(results[1].data.markets || results[1].data || [])];
+    const seen = new Set();
+    const btc = all.filter(m => {
+      const q = (m.question || m.title || "").toLowerCase();
+      const isBtc = q.includes("bitcoin") || q.includes("btc");
+      if (!isBtc || seen.has(m.conditionId || m.id)) return false;
+      seen.add(m.conditionId || m.id);
+      return true;
+    });
+    logger.info(`Found ${btc.length} active BTC markets`);
+    return btc.map(m => ({ conditionId: m.conditionId || m.id, slug: m.slug, question: m.question || m.title, endDate: m.endDate || m.end_date_iso, volume: parseFloat(m.volume || 0), liquidity: parseFloat(m.liquidity || 0), active: m.active !== false, tokens: m.tokens || [] }));
+  } catch (err) { logger.error(`Failed to fetch markets: ${err.message}`); return []; }
+}
 
   async fetchOrderBook(tokenId) {
     try { const res = await this.clob.get("/book", { params: { token_id: tokenId } }); return res.data; } catch { return null; }
