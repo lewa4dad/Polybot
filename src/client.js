@@ -23,20 +23,31 @@ export class PolymarketClient {
     this.clob.interceptors.response.use(r => r, err => { logger.debug(`CLOB err: ${err.response?.data?.message || err.message}`); return Promise.reject(err); });
   }
 
- async fetchBTCMarkets() {
+async fetchBTCMarkets() {
   try {
-    const results = await Promise.all([
-      axios.get(`${GAMMA_BASE}/markets`, { params: { tag_slug: "bitcoin", active: true, limit: 100 }, timeout: 10000 }),
-      axios.get(`${GAMMA_BASE}/markets`, { params: { tag_slug: "crypto", active: true, limit: 100 }, timeout: 10000 }),
-    ]);
-    const all = [...(results[0].data.markets || results[0].data || []), ...(results[1].data.markets || results[1].data || [])];
-    const seen = new Set();
-    const btc = all.filter(m => {
-      const q = (m.question || m.title || "").toLowerCase();
-      const isBtc = (q.includes("bitcoin") || q.includes("btc")) && q.includes("up or down");
-      if (!isBtc || seen.has(m.conditionId || m.id)) return false;
-      seen.add(m.conditionId || m.id);
-      return true;
+    const res = await axios.get(`${GAMMA_BASE}/events`, {
+      params: { slug: "btc-updown-5m", active: true, limit: 20 },
+      timeout: 10000,
+    });
+    const events = Array.isArray(res.data) ? res.data : [res.data];
+    const markets = events.flatMap(e => e.markets || []);
+    logger.info(`Found ${markets.length} BTC 5min markets`);
+    return markets.map(m => ({
+      conditionId: m.conditionId || m.id,
+      slug: m.slug,
+      question: m.question || m.title,
+      endDate: m.endDate,
+      volume: parseFloat(m.volume || 0),
+      liquidity: parseFloat(m.liquidity || 0),
+      active: m.active !== false,
+      tokens: m.tokens || [],
+      clobTokenIds: m.clobTokenIds || m.clob_token_ids || [],
+    }));
+  } catch (err) {
+    logger.error(`Failed to fetch markets: ${err.message}`);
+    return [];
+  }
+}
     });
     logger.info(`Found ${btc.length} active BTC markets`);
    return btc.map(m => ({ conditionId: m.conditionId || m.id, slug: m.slug, question: m.question || m.title, endDate: m.endDate || m.end_date_iso, volume: parseFloat(m.volume || 0), liquidity: parseFloat(m.liquidity || 0), active: m.active !== false, tokens: m.tokens || [], clobTokenIds: m.clobTokenIds || m.clob_token_ids || [] }));
