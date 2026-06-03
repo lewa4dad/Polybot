@@ -33,7 +33,7 @@ export class PolymarketClient {
     const seen = new Set();
     const btc = all.filter(m => {
       const q = (m.question || m.title || "").toLowerCase();
-      const isBtc = q.includes("bitcoin") || q.includes("btc");
+      const isBtc = (q.includes("bitcoin") || q.includes("btc")) && q.includes("up or down");
       if (!isBtc || seen.has(m.conditionId || m.id)) return false;
       seen.add(m.conditionId || m.id);
       return true;
